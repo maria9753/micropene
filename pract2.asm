@@ -88,21 +88,18 @@ resultado:
     MOV DX, OFFSET L1 ; |
     MOV AH, 9
     int 21h
-    MOV DX, OFFSET A
-    MOV AH, 9
-    int 21h
+    MOV AX, A
+    CALL IMPRIMIR
     MOV DX, OFFSET L5
     MOV AH, 9
     int 21h
-    MOV DX, OFFSET A+2
-    MOV AH, 9
-    int 21h
+    MOV AX, A+2
+    CALL IMPRIMIR
     MOV DX, OFFSET L5
     MOV AH, 9
     int 21h
-    MOV DX, OFFSET A+4
-    MOV AH, 9
-    int 21h
+    MOV AX, A4
+    CALL IMPRIMIR
     MOV DX, OFFSET L2
     MOV AH, 9
     int 21h
@@ -113,21 +110,18 @@ resultado:
     MOV DX, OFFSET L1 ; |
     MOV AH, 9
     int 21h
-    MOV DX, OFFSET A+6
-    MOV AH, 9
-    int 21h
+    MOV AX, A+6
+    CALL IMPRIMIR
     MOV DX, OFFSET L5
     MOV AH, 9
     int 21h
-    MOV DX, OFFSET A+8
-    MOV AH, 9
-    int 21h
+    MOV AX, A+8
+    CALL IMPRIMIR
     MOV DX, OFFSET L5
     MOV AH, 9
     int 21h
-    MOV DX, OFFSET A+10
-    MOV AH, 9
-    int 21h
+    MOV AX, A+10
+    CALL IMPRIMIR
     MOV DX, OFFSET L1 ; |
     MOV AH, 9
     int 21h
@@ -147,21 +141,18 @@ resultado:
     MOV DX, OFFSET L1 ; |
     MOV AH, 9
     int 21h
-    MOV DX, OFFSET A+12
-    MOV AH, 9
-    int 21h
+    MOV AX, A+12
+    CALL IMPRIMIR
     MOV DX, OFFSET L5
     MOV AH, 9
     int 21h
-    MOV DX, OFFSET A+14
-    MOV AH, 9
-    int 21h
+    MOV AX, A+14
+    CALL IMPRIMIR
     MOV DX, OFFSET L5
     MOV AH, 9
     int 21h
-    MOV DX, OFFSET A+16
-    MOV AH, 9
-    int 21h
+    MOV AX, A+16
+    CALL IMPRIMIR
     MOV DX, OFFSET L2
     MOV AH, 9
     int 21h
@@ -177,9 +168,38 @@ START ENDP
 ; SALIDA AX=RESULTADO, DX=0 YA QUE CL<=9 
 ;_______________________________________________________________ 
 
-FACTOR PROC NEAR 
+IMPRIMIR PROC 
+    PUSH AX     ; Guardar contexto
+    PUSH BX
+    PUSH CX
+    PUSH DX
+
+    MOV CX, 0   ; Contador de dígitos
+    MOV BX, 10  ; Dvivisor
     
-FACTOR ENDP 
+divi:
+    MOV DX, 0   ; Limpiar DX para la división (DX:AX)
+    DIV BX      ; AX = cociente, DX = resto, BX = divisor, (DX:AX) = dividento (antes de realizar la operación)
+    PUSH DX     ; Guardar resto en la pila
+    INC CX      ; Incrementar contador de dígitos
+    CMP AX, 0   ; ¿El cociente es 0?
+    JNE divi    ; Si no es 0, volver a dividir
+    
+impri:
+    POP DX      ; Sacar el último resto, que será el primer dígito
+    ADD DL, 30h ; Sumarle 30h para pasarlo a ASCII
+    MOV AH, 02h ; Función que imprime un caracter
+    int 21h
+    
+    DEC CX      ; En CX estaba el número de dígitos
+    JNZ impri   ; Si CX no es 0, todavía quedan dígitos y se repite
+    
+    POP DX      ; Recuperar contexto
+    POP CX
+    POP BX
+    POP AX
+    RET
+IMPRMIR ENDP 
 
 ; FIN DEL SEGMENTO DE CODIGO 
 CODE ENDS 
