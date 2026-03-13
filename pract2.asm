@@ -1,15 +1,22 @@
 ; DEFINICION DEL SEGMENTO DE DATOS 
 
 DATOS    SEGMENT 
-    A DW 10, 0, 0, 0, 1, 0, 0, 0, 1
+    A DB 1, 0, 0, 0, 1, 5, 0, 0, 1
+    B DB 4, 0, 4, 3, 5, 6, 8, 9, 1
+    RES DW 9 DUP (0)
+    I DW 1, 0, 0, 0, 1, 0, 0, 0, 1
     RESULT DB "SI", '$'
     AUX DB "NO", '$'
     L0 DB "     ", '$' ; 5 ESPACIOS
     L1 DB "|", '$'
-    L2 DB "|", 13, 10, '$'
-    L3 DB "C=   ", '$' ; 3 ESPACIOS
-    L4 DB " : ES IDENTIDAD ", '$'
+    L2 DB 13, 10, '$'
+    L3 DB "C =     ", '$' ; 3 ESPACIOS
+    L4 DB "Resultado = B ", '$'
     L5 DB " ", '$' ; 1 ESPACIO
+    L6 DB "A · B = ", '$'
+    L7 DB ".", '$'
+    L8 DB " = C", '$'
+    L9 DB " es la matríz inversa de A", '$'
 
 DATOS ENDS 
 
@@ -51,26 +58,51 @@ START PROC
     ; FIN DE LAS INICIALIZACIONES 
 
     ;COMIENZO DEL PROGRAMA 
+
+    CALL COMPROBAR_ID
     
-    CMP A, 1
-    JNE cambio
-    CMP A+2, 0
-    JNE cambio
-    CMP A+4, 0
-    JNE cambio
-    CMP A+6, 0
-    JNE cambio
-    CMP A+8, 1
-    JNE cambio
-    CMP A+10, 0
-    JNE cambio
-    CMP A+12, 0 
-    JNE cambio
-    CMP A+14, 0 
-    JNE cambio
-    CMP A+16, 1
-    JE resultado
+    CALL IMPRIMIR_5ESP
+    MOV AX, 0
+    MOV SI, AX
+    MOV BX, OFFSET A
+    CALL IMPRIMIR_LIN
+    CALL IMPRIMIR_SALTO
+    CALL IMPRIMIR_C1
+    ADD SI, 6
+    CALL IMPRIMIR_LIN
+    CALL IMPRIMIR_RES
+    CALL IMPRIMIR_SALTO
+    CALL IMPRIMIR_5ESP
+    ADD SI, 6
+    CALL IMPRIMIR_LIN
+
+    MOV AX, 4C00h
+    int 21h
+
+START ENDP 
+
+;_______________________________________________________________ 
+; SUBRUTINA QUE CAMBIA EL VALOR DE LA VARIABLE RESULT EN FUNCIÓN
+; DE SI LA MATRIZ ES LA IDENTIDAD
+;_______________________________________________________________ 
+COMPROBAR_ID PROC 
+    PUSH AX     ; Guardar contexto
+    PUSH SI
+    PUSH DI
+    PUSH CX
+    PUSH ES
     
+    MOV SI, 0   ; Índice de la matriz
+    MOV CX, 9   ; 9 elementos a comprobar
+
+comparacion:
+    MOV AX, A[SI]
+    CMP AX, I[SI]
+    JNE cambio
+    ADD SI, 2
+    DEC CX
+    JNZ comparacion
+    JMP fin1
 
 cambio:
     MOV AX, DATOS
@@ -81,101 +113,27 @@ cambio:
     CLD
     REP MOVSB 
 
-resultado:
-    MOV DX, OFFSET L0 ; 5 ESPACIOS
-    MOV AH, 9
-    int 21h
-    MOV DX, OFFSET L1 ; |
-    MOV AH, 9
-    int 21h
-    MOV AX, A
-    CALL IMPRIMIR
-    MOV DX, OFFSET L5
-    MOV AH, 9
-    int 21h
-    MOV AX, A+2
-    CALL IMPRIMIR
-    MOV DX, OFFSET L5
-    MOV AH, 9
-    int 21h
-    MOV AX, A4
-    CALL IMPRIMIR
-    MOV DX, OFFSET L2
-    MOV AH, 9
-    int 21h
+fin1:
+    POP ES
+    POP CX
+    POP DI
+    POP SI
+    POP AX
+    RET
+COMPROBAR_ID ENDP
 
-    MOV DX, OFFSET L3
-    MOV AH, 9
-    int 21h
-    MOV DX, OFFSET L1 ; |
-    MOV AH, 9
-    int 21h
-    MOV AX, A+6
-    CALL IMPRIMIR
-    MOV DX, OFFSET L5
-    MOV AH, 9
-    int 21h
-    MOV AX, A+8
-    CALL IMPRIMIR
-    MOV DX, OFFSET L5
-    MOV AH, 9
-    int 21h
-    MOV AX, A+10
-    CALL IMPRIMIR
-    MOV DX, OFFSET L1 ; |
-    MOV AH, 9
-    int 21h
-    MOV DX, OFFSET L4
-    MOV AH, 9
-    int 21h
-    MOV DX, OFFSET RESULT
-    MOV AH, 9
-    int 21h
-    MOV DX, OFFSET L2
-    MOV AH, 9
-    int 21h
-    
-    MOV DX, OFFSET L0 ; 5 ESPACIOS
-    MOV AH, 9
-    int 21h
-    MOV DX, OFFSET L1 ; |
-    MOV AH, 9
-    int 21h
-    MOV AX, A+12
-    CALL IMPRIMIR
-    MOV DX, OFFSET L5
-    MOV AH, 9
-    int 21h
-    MOV AX, A+14
-    CALL IMPRIMIR
-    MOV DX, OFFSET L5
-    MOV AH, 9
-    int 21h
-    MOV AX, A+16
-    CALL IMPRIMIR
-    MOV DX, OFFSET L2
-    MOV AH, 9
-    int 21h
-
-    ; FIN DEL PROGRAMA 
-    MOV AX, 4C00H 
-    INT 21H 
-
-START ENDP 
 ;_______________________________________________________________ 
-; SUBRUTINA PARA CALCULAR EL FACTORIAL DE UN NUMERO 
-; ENTRADA CL=NUMERO 
-; SALIDA AX=RESULTADO, DX=0 YA QUE CL<=9 
+; SUBRUTINA PARA IMPRIMIR UN NÚMERO DE UNO O 
+; VARIOS DÍGITOS EN ASCII 
 ;_______________________________________________________________ 
-
-IMPRIMIR PROC 
+IMPRIMIR_NUM PROC 
     PUSH AX     ; Guardar contexto
     PUSH BX
     PUSH CX
     PUSH DX
 
     MOV CX, 0   ; Contador de dígitos
-    MOV BX, 10  ; Dvivisor
+    MOV BX, 10  ; Divisor
     
 divi:
     MOV DX, 0   ; Limpiar DX para la división (DX:AX)
@@ -184,6 +142,8 @@ divi:
     INC CX      ; Incrementar contador de dígitos
     CMP AX, 0   ; ¿El cociente es 0?
     JNE divi    ; Si no es 0, volver a dividir
+    
+    MOV BP, CX  ; Guardar temporalmente el número de dígitos
     
 impri:
     POP DX      ; Sacar el último resto, que será el primer dígito
@@ -194,15 +154,133 @@ impri:
     DEC CX      ; En CX estaba el número de dígitos
     JNZ impri   ; Si CX no es 0, todavía quedan dígitos y se repite
     
+    MOV CX, 5   ; Cada celda ocupa 5 espacios
+    SUB CX, BP  ; Mirar cuántos espacios hay sin ocupar, se guarda en CX
+    JZ fin2     ; Si es 0, acabar
+    
+esps: 
+    CALL IMPRIMIR_ESP
+    DEC CX
+    JNZ esps
+
+fin2:
     POP DX      ; Recuperar contexto
     POP CX
     POP BX
     POP AX
     RET
-IMPRMIR ENDP 
+IMPRIMIR_NUM ENDP 
+
+;_______________________________________________________________ 
+; SUBRUTINA PARA IMPRIMIR EL RESULTADO
+;_______________________________________________________________ 
+IMPRIMIR_RES PROC 
+    MOV AH, 9
+
+    MOV DX, OFFSET L4
+    int 21h
+
+    MOV DX, OFFSET RESULT
+    int 21h
+    
+    RET
+IMPRIMIR_RES ENDP
+
+;_______________________________________________________________ 
+; SUBRUTINA PARA IMPRIMIR UN SALTO DE LÍNEA
+;_______________________________________________________________ 
+IMPRIMIR_SALTO PROC 
+    MOV AH, 9
+
+    MOV DX, OFFSET L2
+    int 21h
+
+    RET
+IMPRIMIR_SALTO ENDP
+
+;_______________________________________________________________ 
+; SUBRUTINA PARA IMPRIMIR UN ESPACIO
+;_______________________________________________________________ 
+IMPRIMIR_ESP PROC 
+    MOV AH, 9
+    
+    MOV DX, OFFSET L5
+    int 21h
+
+    RET
+IMPRIMIR_ESP ENDP
+
+;_______________________________________________________________ 
+; SUBRUTINA PARA IMPRIMIR CINCO ESPACIOS
+;_______________________________________________________________ 
+IMPRIMIR_5ESP PROC 
+    MOV AH, 9
+    
+    MOV DX, OFFSET L0
+    int 21h
+
+    RET
+IMPRIMIR_5ESP ENDP
+
+;_______________________________________________________________ 
+; SUBRUTINA PARA IMPRIMIR UNA LÍNEA DE LA MATRÍZ
+; Parámetros: 
+;   - BX = dirección de inicio de la matríz
+;   - SI = desplazamiento (0, 6 o 12)
+;_______________________________________________________________ 
+IMPRIMIR_LIN PROC 
+    PUSH AX
+    PUSH DX
+    PUSH CX
+    PUSH BX
+    
+    ADD BX, SI
+
+    CALL IMPRIMIR_BAR
+    MOV AX, [BX]
+    CALL IMPRIMIR_NUM
+    ADD BX, 2
+    CALL IMPRIMIR_ESP
+    MOV AX, [BX]
+    CALL IMPRIMIR_NUM
+    ADD BX, 2
+    CALL IMPRIMIR_ESP
+    MOV AX, [BX]
+    CALL IMPRIMIR_NUM
+    CALL IMPRIMIR_BAR
+
+    POP BX
+    POP CX
+    POP DX
+    POP AX
+    RET
+IMPRIMIR_LIN ENDP
+
+;_______________________________________________________________ 
+; SUBRUTINA PARA IMPRIMIR UNA BARRA
+;_______________________________________________________________
+IMPRIMIR_BAR PROC 
+    MOV AH, 9
+
+    MOV DX, OFFSET L1
+    int 21h
+
+    RET
+IMPRIMIR_BAR ENDP
+
+;_______________________________________________________________ 
+; SUBRUTINA PARA IMPRIMIR C =
+;_______________________________________________________________
+IMPRIMIR_C1 PROC 
+    MOV AH, 9
+
+    MOV DX, OFFSET L3
+    int 21h
+
+    RET
+IMPRIMIR_C1 ENDP 
 
 ; FIN DEL SEGMENTO DE CODIGO 
 CODE ENDS 
 ; FIN DEL PROGRAMA INDICANDO DONDE COMIENZA LA EJECUCION 
 END START 
-
