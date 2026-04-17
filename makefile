@@ -1,5 +1,9 @@
-all: pract2.exe
-pract2.exe: pract2.obj
- tlink /v pract2
-pract2.obj: pract2.asm
- tasm /zi parct2.asm,,pract2.lst
+all: p4a.com p4b.exe
+p4a.com: p4a.obj
+	tlink /t p4a.obj
+p4a.obj: p4a.asm
+	tasm /zi p4a.asm,,p4a.lst
+p4b.exe: p4b.obj
+	tlink /v p4b.obj
+p4b.obj: p4b.asm
+	tasm /zi p4b.asm,,p4b.lst
